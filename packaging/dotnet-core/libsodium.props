@@ -1,13 +1,15 @@
 <?xml version="1.0"?>
 <Project>
+
   <PropertyGroup>
-    <TargetFramework>netstandard1.1</TargetFramework>
+    <TargetFrameworks>netstandard1.1;net46</TargetFrameworks>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <NoBuild>true</NoBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageOutputPath>$(MSBuildProjectDirectory)</PackageOutputPath>
     <ProjectFileToPack>$(MSBuildProjectFullPath)</ProjectFileToPack>
   </PropertyGroup>
+
   <PropertyGroup>
     <PackageId>libsodium</PackageId>
     <Version><!-- set by prepare.py --></Version>
@@ -17,11 +19,15 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseUrl>https://raw.githubusercontent.com/jedisct1/libsodium/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://libsodium.org/</PackageProjectUrl>
+    <MinClientVersion>4.0</MinClientVersion>
   </PropertyGroup>
+
   <ItemGroup>
     <Content Include="LICENSE" PackagePath="" />
     <Content Include="AUTHORS" PackagePath="" />
     <Content Include="ChangeLog" PackagePath="" />
     <Content Include="runtimes\**\*.*" PackagePath="runtimes\" />
+    <Content Include="build\**\*.*" PackagePath="build\" />
   </ItemGroup>
+
 </Project>

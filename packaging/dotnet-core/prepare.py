@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import os.path
 import re
@@ -8,8 +8,8 @@ WINDOWS = [
   # --------------------- ----------------- #
   # Runtime ID            Platform          #
   # --------------------- ----------------- #
-  ( 'win10-x64',          'x64'             ),
-  ( 'win10-x86',          'Win32'           ),
+  ( 'win7-x64',           'x64'             ),
+  ( 'win7-x86',           'Win32'           ),
   # --------------------- ----------------- #
 ]
 
@@ -24,24 +24,25 @@ MACOS = [
 ]
 
 LINUX = [
-  # --------------------- ------------------
-  # Runtime ID            Docker Image
-  # --------------------- ------------------
-  ( 'alpine.3-x64',       'alpine:3.4'      ),
+  # --------------------- ----------------- #
+  # Runtime ID            Docker Image      #
+  # --------------------- ----------------- #
   ( 'centos.7-x64',       'centos:7.1.1503' ),
   ( 'debian.8-x64',       'debian:8.2'      ),
   ( 'fedora.24-x64',      'fedora:24'       ),
   ( 'fedora.25-x64',      'fedora:25'       ),
+  ( 'fedora.26-x64',      'fedora:26'       ),
   ( 'opensuse.42.1-x64',  'opensuse:42.1'   ),
   ( 'ubuntu.14.04-x64',   'ubuntu:trusty'   ),
   ( 'ubuntu.16.04-x64',   'ubuntu:xenial'   ),
   ( 'ubuntu.16.10-x64',   'ubuntu:yakkety'  ),
-  # --------------------- ------------------
+  # --------------------- ----------------- #
 ]
 
 EXTRAS = [ 'LICENSE', 'AUTHORS', 'ChangeLog' ]
 
 PROPSFILE = 'libsodium.props'
+DESKTOPTARGETSFILE = 'desktop.targets'
 MAKEFILE = 'Makefile'
 BUILDDIR = 'build'
 CACHEDIR = 'cache'
@@ -54,21 +55,21 @@ DOCKER = 'sudo docker'
 
 class Version:
 
-  def __init__(self, prefix, suffix):
-    self.prefix = prefix
-    self.suffix = suffix
-    self.version = prefix + '-' + suffix if suffix is not None else prefix
+  def __init__(self, libsodium_version, package_version):
+    self.libsodium_version = libsodium_version
+    self.package_version = package_version
 
-    self.builddir = os.path.join(BUILDDIR, prefix)
-    self.tempdir = os.path.join(TEMPDIR, prefix)
-    self.projfile = os.path.join(self.builddir, '{0}.pkgproj'.format(PACKAGE))
+    self.builddir = os.path.join(BUILDDIR, libsodium_version)
+    self.tempdir = os.path.join(TEMPDIR, libsodium_version)
+    self.projfile = os.path.join(self.builddir, '{0}.{1}.pkgproj'.format(PACKAGE, package_version))
     self.propsfile = os.path.join(self.builddir, '{0}.props'.format(PACKAGE))
-    self.pkgfile = os.path.join(BUILDDIR, '{0}.{1}.nupkg'.format(PACKAGE, self.version))
+    self.pkgfile = os.path.join(BUILDDIR, '{0}.{1}.nupkg'.format(PACKAGE, package_version))
+    self.desktoptargetsfile = os.path.join(self.builddir, 'build', 'net46', '{0}.targets'.format(PACKAGE))
 
 class WindowsItem:
 
   def __init__(self, version, rid, platform):
-    self.url = 'https://download.libsodium.org/libsodium/releases/libsodium-{0}-msvc.zip'.format(version.prefix)
+    self.url = 'https://download.libsodium.org/libsodium/releases/libsodium-{0}-msvc.zip'.format(version.libsodium_version)
     self.cachefile = os.path.join(CACHEDIR, re.sub(r'[^A-Za-z0-9.]', '-', self.url))
     self.packfile = os.path.join(version.builddir, 'runtimes', rid, 'native', LIBRARY + '.dll')
     self.itemfile = '{0}/Release/v140/dynamic/libsodium.dll'.format(platform)
@@ -92,10 +93,10 @@ class WindowsItem:
 class MacOSItem:
 
   def __init__(self, version, rid, codename):
-    self.url = 'https://bintray.com/homebrew/bottles/download_file?file_path=libsodium-{0}.{1}.bottle.tar.gz'.format(version.prefix, codename)
+    self.url = 'https://bintray.com/homebrew/bottles/download_file?file_path=libsodium-{0}.{1}.bottle.tar.gz'.format(version.libsodium_version, codename)
     self.cachefile = os.path.join(CACHEDIR, re.sub(r'[^A-Za-z0-9.]', '-', self.url))
     self.packfile = os.path.join(version.builddir, 'runtimes', rid, 'native', LIBRARY + '.dylib')
-    self.itemfile = 'libsodium/{0}/lib/libsodium.dylib'.format(version.prefix)
+    self.itemfile = 'libsodium/{0}/lib/libsodium.dylib'.format(version.libsodium_version)
     self.tempdir = os.path.join(version.tempdir, rid)
     self.tempfile = os.path.join(self.tempdir, os.path.normpath(self.itemfile))
 
@@ -116,9 +117,11 @@ class MacOSItem:
 class LinuxItem:
 
   def __init__(self, version, rid, docker_image):
-    self.url = 'https://download.libsodium.org/libsodium/releases/libsodium-{0}.tar.gz'.format(version.prefix)
+    self.url = 'https://download.libsodium.org/libsodium/releases/libsodium-{0}.tar.gz'.format(version.libsodium_version)
     self.cachefile = os.path.join(CACHEDIR, re.sub(r'[^A-Za-z0-9.]', '-', self.url))
     self.packfile = os.path.join(version.builddir, 'runtimes', rid, 'native', LIBRARY + '.so')
+    self.tempdir = os.path.join(version.tempdir, rid)
+    self.tempfile = os.path.join(self.tempdir, 'libsodium.so')
     self.docker_image = docker_image
     self.recipe = rid
 
@@ -135,7 +138,11 @@ class LinuxItem:
         recipe = m.group(1) + m.group(3) + m.group(5)
 
     f.write('\n')
-    f.write('{0}: {1}\n'.format(self.packfile, self.cachefile))
+    f.write('{0}: {1}\n'.format(self.packfile, self.tempfile))
+    f.write('\t@mkdir -p $(dir $@)\n')
+    f.write('\tcp -f $< $@\n')
+    f.write('\n')
+    f.write('{0}: {1}\n'.format(self.tempfile, self.cachefile))
     f.write('\t@mkdir -p $(dir $@)\n')
     f.write('\t{0} run --rm '.format(DOCKER) +
             '-v $(abspath recipes):/io/recipes ' +
@@ -146,11 +153,11 @@ class LinuxItem:
 class ExtraItem:
 
   def __init__(self, version, filename):
-    self.url = 'https://download.libsodium.org/libsodium/releases/libsodium-{0}.tar.gz'.format(version.prefix)
+    self.url = 'https://download.libsodium.org/libsodium/releases/libsodium-{0}.tar.gz'.format(version.libsodium_version)
     self.cachefile = os.path.join(CACHEDIR, re.sub(r'[^A-Za-z0-9.]', '-', self.url))
     self.packfile = os.path.join(version.builddir, filename)
-    self.itemfile = 'libsodium-{0}/{1}'.format(version.prefix, filename)
-    self.tempdir = version.tempdir
+    self.itemfile = 'libsodium-{0}/{1}'.format(version.libsodium_version, filename)
+    self.tempdir = os.path.join(version.tempdir, 'extras')
     self.tempfile = os.path.join(self.tempdir, os.path.normpath(self.itemfile))
 
   def make(self, f):
@@ -168,20 +175,23 @@ class ExtraItem:
     ))
 
 def main(args):
-  m = re.fullmatch(r'(\d+(?:\.\d+){1,3})(?:-(\w+(?:[_.-]\w+)*))?', args[1]) if len(args) == 2 else None
+  m = re.fullmatch(r'((\d+\.\d+\.\d+)(\.\d+)?)(?:-(\w+(?:[_.-]\w+)*))?', args[1]) if len(args) == 2 else None
 
   if m is None:
     print('Usage:')
-    print('       python3 prepare.py <version>[-preview-##]')
+    print('       python3 prepare.py <version>')
     print()
     print('Examples:')
-    print('       python3 prepare.py 1.0.12-preview-01')
-    print('       python3 prepare.py 1.0.12-preview-02')
-    print('       python3 prepare.py 1.0.12-preview-03')
-    print('       python3 prepare.py 1.0.12')
+    print('       python3 prepare.py 1.0.13-preview-01')
+    print('       python3 prepare.py 1.0.13-preview-02')
+    print('       python3 prepare.py 1.0.13-preview-03')
+    print('       python3 prepare.py 1.0.13')
+    print('       python3 prepare.py 1.0.13.1-preview-01')
+    print('       python3 prepare.py 1.0.13.1')
+    print('       python3 prepare.py 1.0.13.2')
     return 1
 
-  version = Version(m.group(1), m.group(2))
+  version = Version(m.group(2), m.group(0))
 
   items = [ WindowsItem(version, rid, platform)   for (rid, platform) in WINDOWS   ] + \
           [ MacOSItem(version, rid, codename)     for (rid, codename) in MACOS     ] + \
@@ -203,6 +213,11 @@ def main(args):
       item.make(f)
 
     f.write('\n')
+    f.write('{0}: {1}\n'.format(version.desktoptargetsfile, DESKTOPTARGETSFILE))
+    f.write('\t@mkdir -p $(dir $@)\n')
+    f.write('\tcp -f $< $@\n')
+
+    f.write('\n')
     f.write('{0}: {1}\n'.format(version.propsfile, PROPSFILE))
     f.write('\t@mkdir -p $(dir $@)\n')
     f.write('\tcp -f $< $@\n')
@@ -214,7 +229,7 @@ def main(args):
             '<Project Sdk="Microsoft.NET.Sdk">' +
             '<Import Project="{0}" />'.format(os.path.relpath(version.propsfile, os.path.dirname(version.projfile))) +
             '<PropertyGroup>' +
-            '<VersionPrefix>{0}</VersionPrefix>'.format(version.prefix) +
+            '<Version>{0}</Version>'.format(version.package_version) +
             '</PropertyGroup>' +
             '</Project>\' > $@\n')
 
@@ -222,6 +237,7 @@ def main(args):
     f.write('{0}:'.format(version.pkgfile))
     f.write(' \\\n\t\t{0}'.format(version.projfile))
     f.write(' \\\n\t\t{0}'.format(version.propsfile))
+    f.write(' \\\n\t\t{0}'.format(version.desktoptargetsfile))
     for item in items:
       f.write(' \\\n\t\t{0}'.format(item.packfile))
     f.write('\n')
@@ -230,9 +246,16 @@ def main(args):
             '-v $(abspath recipes):/io/recipes ' +
             '-v $(abspath $(dir $<)):/io/input ' +
             '-v $(abspath $(dir $@)):/io/output ' +
-            '{0} sh -x -e /io/recipes/{1} "{2}"\n'.format('microsoft/dotnet:latest', 'pack', version.suffix))
+            '{0} sh -x -e /io/recipes/{1} {2}\n'.format('microsoft/dotnet:1.1-sdk', 'pack', os.path.relpath(version.projfile, version.builddir)))
 
-  print('prepared', MAKEFILE, 'to make', version.pkgfile)
+    f.write('\n')
+    f.write('test: {0}\n'.format(version.pkgfile))
+    f.write('\t{0} run --rm '.format(DOCKER) +
+            '-v $(abspath recipes):/io/recipes ' +
+            '-v $(abspath $(dir $<)):/io/packages ' +
+            '{0} sh -x -e /io/recipes/{1} "{2}"\n'.format('microsoft/dotnet:1.1-sdk', 'test', version.package_version))
+
+  print('prepared', MAKEFILE, 'to make', version.pkgfile, 'for libsodium', version.libsodium_version)
   return 0
 
 if __name__ == '__main__':

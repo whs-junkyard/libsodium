@@ -109,10 +109,6 @@ int crypto_pwhash_argon2i_str_verify(const char str[crypto_pwhash_argon2i_STRBYT
                                      unsigned long long passwdlen)
             __attribute__ ((warn_unused_result));
 
-/* ------------------------------------------------------------------------- */
-
-int _crypto_pwhash_argon2i_pick_best_implementation(void);
-
 #ifdef __cplusplus
 }
 #endif
