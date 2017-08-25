@@ -1,0 +1,16 @@
+# Emscripten definition for Meson
+# Use: --cross-file builds/emscripten.txt
+
+[binaries]
+c = 'emcc'
+ar = 'emar'
+exe_wrapper = 'node'
+
+[properties]
+root = '/usr/lib/emscripten/system'
+
+[host_machine]
+system = 'emscripten'
+cpu_family = 'asmjs'
+cpu = 'asmjs'
+endian = 'little'

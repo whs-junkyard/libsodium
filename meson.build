@@ -27,6 +27,13 @@ is_pnacl = is_nativeclient and compiler.get_define('__pnacl__') != ''
 is_emscripten = compiler.get_define('__EMSCRIPTEN__') != ''
 is_win_posix = false # TODO: Detection
 
+if is_nativeclient
+	add_project_arguments('-DNATIVECLIENT=1', language : 'c')
+endif
+if is_emscripten
+	add_project_arguments('-DEMSCRIPTEN=1', language : 'c')
+endif
+
 # TODO: Safecode
 
 enable_asm = get_option('asm')
