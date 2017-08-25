@@ -296,6 +296,12 @@ else
 	)
 endif
 
+libsodium_dep = declare_dependency(
+	include_directories : include_dirs,
+	dependencies : dependencies,
+	link_with : [libsodium],
+)
+
 # Generate libsodium.pc
 pkg = import('pkgconfig')
 

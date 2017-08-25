@@ -11,10 +11,10 @@ version_conf.set('SODIUM_LIBRARY_VERSION_MINOR', 6)
 version_conf.set_quoted('SODIUM_VERSION_STRING', meson.project_version())
 
 dll_version = 8
-sodium_library_version = '19.4.0'
+sodium_library_version = '18.4.0'
 
 compiler = meson.get_compiler('c')
-add_project_arguments('-DCONFIGURED__=1', language : 'c')
+add_project_arguments('-DCONFIGURED=1', language : 'c')
 
 add_project_arguments('-D__EXTENSIONS__=1', language : 'c')
 add_project_arguments('-D_ALL_SOURCE=1', language : 'c')
@@ -584,10 +584,5 @@ endforeach
 
 # TODO: Emscripten LDFlags (use target file?)
 
-# TODO:
-#src/libsodium/include/Makefile
-#                 src/libsodium/include/sodium/version.h
-#                 test/default/Makefile
-#                 test/Makefile
-
 subdir('src/libsodium')
+subdir('test/default')
