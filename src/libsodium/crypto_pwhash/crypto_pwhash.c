@@ -163,9 +163,8 @@ crypto_pwhash_str_alg(char out[crypto_pwhash_STRBYTES],
     case crypto_pwhash_ALG_ARGON2ID13:
         return crypto_pwhash_argon2id_str(out, passwd, passwdlen,
                                           opslimit, memlimit);
-    default:
-        sodium_misuse();
     }
+    sodium_misuse();
 }
 
 int
@@ -180,6 +179,23 @@ crypto_pwhash_str_verify(const char str[crypto_pwhash_STRBYTES],
     if (strncmp(str, crypto_pwhash_argon2i_STRPREFIX,
                 sizeof crypto_pwhash_argon2i_STRPREFIX - 1) == 0) {
         return crypto_pwhash_argon2i_str_verify(str, passwd, passwdlen);
+    }
+    errno = EINVAL;
+
+    return -1;
+}
+
+int
+crypto_pwhash_str_needs_rehash(const char str[crypto_pwhash_STRBYTES],
+                               unsigned long long opslimit, size_t memlimit)
+{
+    if (strncmp(str, crypto_pwhash_argon2id_STRPREFIX,
+                sizeof crypto_pwhash_argon2id_STRPREFIX - 1) == 0) {
+        return crypto_pwhash_argon2id_str_needs_rehash(str, opslimit, memlimit);
+    }
+    if (strncmp(str, crypto_pwhash_argon2i_STRPREFIX,
+                sizeof crypto_pwhash_argon2i_STRPREFIX - 1) == 0) {
+        return crypto_pwhash_argon2i_str_needs_rehash(str, opslimit, memlimit);
     }
     errno = EINVAL;
 

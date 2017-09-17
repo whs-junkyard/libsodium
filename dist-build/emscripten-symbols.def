@@ -274,6 +274,7 @@ _crypto_pwhash_argon2i_passwd_max 0 1
 _crypto_pwhash_argon2i_passwd_min 0 1
 _crypto_pwhash_argon2i_saltbytes 0 1
 _crypto_pwhash_argon2i_str 0 1
+_crypto_pwhash_argon2i_str_needs_rehash 0 1
 _crypto_pwhash_argon2i_str_verify 0 1
 _crypto_pwhash_argon2i_strbytes 0 1
 _crypto_pwhash_argon2i_strprefix 0 1
@@ -295,6 +296,7 @@ _crypto_pwhash_argon2id_passwd_max 0 1
 _crypto_pwhash_argon2id_passwd_min 0 1
 _crypto_pwhash_argon2id_saltbytes 0 1
 _crypto_pwhash_argon2id_str 0 1
+_crypto_pwhash_argon2id_str_needs_rehash 0 1
 _crypto_pwhash_argon2id_str_verify 0 1
 _crypto_pwhash_argon2id_strbytes 0 1
 _crypto_pwhash_argon2id_strprefix 0 1
@@ -330,11 +332,13 @@ _crypto_pwhash_scryptsalsa208sha256_passwd_max 0 1
 _crypto_pwhash_scryptsalsa208sha256_passwd_min 0 1
 _crypto_pwhash_scryptsalsa208sha256_saltbytes 0 1
 _crypto_pwhash_scryptsalsa208sha256_str 0 1
+_crypto_pwhash_scryptsalsa208sha256_str_needs_rehash 0 1
 _crypto_pwhash_scryptsalsa208sha256_str_verify 0 1
 _crypto_pwhash_scryptsalsa208sha256_strbytes 0 1
 _crypto_pwhash_scryptsalsa208sha256_strprefix 0 1
 _crypto_pwhash_str 0 1
 _crypto_pwhash_str_alg 0 1
+_crypto_pwhash_str_needs_rehash 0 1
 _crypto_pwhash_str_verify 0 1
 _crypto_pwhash_strbytes 0 1
 _crypto_pwhash_strprefix 0 1
@@ -381,7 +385,7 @@ _crypto_secretbox_zerobytes 0 1
 _crypto_secretstream_xchacha20poly1305_abytes 1 1
 _crypto_secretstream_xchacha20poly1305_init_pull 1 1
 _crypto_secretstream_xchacha20poly1305_init_push 1 1
-_crypto_secretstream_xchacha20poly1305_initbytes 1 1
+_crypto_secretstream_xchacha20poly1305_headerbytes 1 1
 _crypto_secretstream_xchacha20poly1305_keybytes 1 1
 _crypto_secretstream_xchacha20poly1305_keygen 1 1
 _crypto_secretstream_xchacha20poly1305_messagebytes_max 1 1
@@ -549,6 +553,7 @@ _sodium_pad 1 1
 _sodium_runtime_has_aesni 0 0
 _sodium_runtime_has_avx 0 0
 _sodium_runtime_has_avx2 0 0
+_sodium_runtime_has_avx512f 0 0
 _sodium_runtime_has_neon 0 0
 _sodium_runtime_has_pclmul 0 0
 _sodium_runtime_has_sse2 0 0
