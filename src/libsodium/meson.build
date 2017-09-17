@@ -274,8 +274,19 @@ libavx2 = static_library(
 	include_directories : include_dirs,
 )
 
+# libavx512f
+libavx512f_sources = [
+	'crypto_pwhash/argon2/argon2-fill-block-avx512f.c',
+	'crypto_pwhash/argon2/blamka-round-avx512f.h',
+]
+libavx512f = static_library(
+	'avx512f', libavx512f_sources,
+	dependencies : dependencies + [sse2, ssse3, sse4_1, avx, avx2, avx512f],
+	include_directories : include_dirs,
+)
+
 # libsodium
-link_libs = [libaesni, libsse2, libssse3, libsse41, libavx2]
+link_libs = [libaesni, libsse2, libssse3, libsse41, libavx2, libavx512f]
 if get_option('soname-versions')
 	libsodium = library(
 		'sodium', sources,

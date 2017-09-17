@@ -123,7 +123,7 @@ foreach wanted : wanted_arguments
 endforeach
 
 if is_win_posix
-	wanted_arguments = ['-Wl,--dynamicbase', '-Wl,--high-entropy-va', '-Wl,--nxcompat']
+	wanted_arguments = ['-Wl,--dynamicbase', '-Wl,--high-entropy-va', '-Wl,--nxcompat', '-fno-asynchronous-unwind-tables']
 	foreach wanted : wanted_arguments
 		if compiler.has_argument(wanted)
 			add_project_arguments(wanted, language : 'c')
@@ -138,6 +138,11 @@ enable_ssp = get_option('ssp')
 if enable_ssp and not is_win_posix and compiler.has_argument('-fstack-protector')
 	# TODO: Test linker against -fstack-protector
 	add_project_arguments('-fstack-protector', language : 'c')
+endif
+
+if compiler.get_id() == 'clang' and compiler.version().version_compare('< 4') and compiler.get_define('__AVX512F__') != ''
+	message('Broken clang AVX512 optimization - optimization disabled')
+	add_project_arguments('-mno-avx512f', language : 'c')
 endif
 
 test_catchable_segv = compiler.run('''
@@ -323,6 +328,29 @@ int main(){
 			endif
 		else
 			message('AVX2 is NOT available')
+		endif
+	endif
+
+	avx512f = declare_dependency()
+	if not is_nativeclient
+		compiler_args = []
+		if compiler.has_argument('-mavx512f')
+			avx512f = declare_dependency(compile_args : '-mavx512f')
+			compiler_args += '-mavx512f'
+		endif
+		has_mavx512f = compiler.compiles('''
+#pragma GCC target("avx512f")
+#include <immintrin.h>
+int main(){
+	__m512i x = _mm512_setzero_epi32();
+	__m512i y = _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 1, 4, 5, 2, 3, 6, 7), x);
+}
+	''', args : compiler_args)
+		if has_mavx512f
+			message('AVX512F is available')
+			add_project_arguments('-DHAVE_AVX512FINTRIN_H=1', language : 'c')
+		else
+			message('AVX512F is NOT available')
 		endif
 	endif
 
@@ -592,4 +620,4 @@ endforeach
 # TODO: Emscripten LDFlags (use target file?)
 
 subdir('src/libsodium')
-subdir('test/default')
+# subdir('test/default')
