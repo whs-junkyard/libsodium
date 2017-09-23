@@ -82,12 +82,17 @@ sodium_hex2bin(unsigned char *const bin, const size_t bin_maxlen,
     }
     if (state != 0U) {
         hex_pos--;
-    }
-    if (hex_end != NULL) {
-        *hex_end = &hex[hex_pos];
+        errno = EINVAL;
+        ret = -1;
     }
     if (ret != 0) {
         bin_pos = (size_t) 0U;
+    }
+    if (hex_end != NULL) {
+        *hex_end = &hex[hex_pos];
+    } else if (hex_pos != hex_len) {
+        errno = EINVAL;
+        ret = -1;
     }
     if (bin_len != NULL) {
         *bin_len = bin_pos;
@@ -154,6 +159,22 @@ b64_urlsafe_char_to_byte(int c)
 #define VARIANT_NO_PADDING_MASK 0x2U
 #define VARIANT_URLSAFE_MASK    0x4U
 
+static void
+sodium_base64_check_variant(const int variant)
+{
+    if ((((unsigned int) variant) & ~ 0x6U) != 0x1U) {
+        sodium_misuse();
+    }
+}
+
+size_t
+sodium_base64_encoded_len(const size_t bin_len, const int variant)
+{
+    sodium_base64_check_variant(variant);
+
+    return sodium_base64_ENCODED_LEN(bin_len, variant);
+}
+
 char *
 sodium_bin2base64(char * const b64, const size_t b64_maxlen,
                   const unsigned char * const bin, const size_t bin_len,
@@ -167,9 +188,7 @@ sodium_bin2base64(char * const b64, const size_t b64_maxlen,
     size_t       remainder;
     unsigned int acc = 0U;
 
-    if ((((unsigned int) variant) & ~ 0x6U) != 0x1U) {
-        sodium_misuse();
-    }
+    sodium_base64_check_variant(variant);
     nibbles = bin_len / 3;
     remainder = bin_len - 3 * nibbles;
     b64_len = nibbles * 4;
@@ -258,9 +277,7 @@ sodium_base642bin(unsigned char * const bin, const size_t bin_maxlen,
     unsigned int d;
     char         c;
 
-    if ((((unsigned int) variant) & ~ 0x6U) != 0x1U) {
-        sodium_misuse();
-    }
+    sodium_base64_check_variant(variant);
     is_urlsafe = ((unsigned int) variant) & VARIANT_URLSAFE_MASK;
     while (b64_pos < b64_len) {
         c = b64[b64_pos];
@@ -271,11 +288,6 @@ sodium_base642bin(unsigned char * const bin, const size_t bin_maxlen,
         }
         if (d == 0xFF) {
             if (ignore != NULL && strchr(ignore, c) != NULL) {
-                if (b64_pos >= b64_len) {
-                    errno = ERANGE;
-                    ret = -1;
-                    break;
-                }
                 b64_pos++;
                 continue;
             }
@@ -299,16 +311,23 @@ sodium_base642bin(unsigned char * const bin, const size_t bin_maxlen,
     } else if (ret == 0 &&
                (((unsigned int) variant) & VARIANT_NO_PADDING_MASK) == 0U) {
         ret = _sodium_base642bin_skip_padding(b64, b64_len, &b64_pos, ignore,
-                                               acc_len / 2);
+                                              acc_len / 2);
     }
     if (ret != 0) {
         bin_pos = (size_t) 0U;
-    }
-    if (bin_len != NULL) {
-        *bin_len = bin_pos;
+    } else if (ignore != NULL) {
+        while (b64_pos < b64_len && strchr(ignore, b64[b64_pos]) != NULL) {
+            b64_pos++;
+        }
     }
     if (b64_end != NULL) {
         *b64_end = &b64[b64_pos];
+    } else if (b64_pos != b64_len) {
+        errno = EINVAL;
+        ret = -1;
+    }
+    if (bin_len != NULL) {
+        *bin_len = bin_pos;
     }
     return ret;
 }

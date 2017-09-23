@@ -2,14 +2,79 @@
 #define TEST_NAME "misuse"
 #include "cmptest.h"
 
-#if defined(SIGABRT) && (defined(__APPLE__) || defined(__OpenBSD__))
+#ifdef HAVE_CATCHABLE_ABRT
 # include <signal.h>
+
+static void
+sigabrt_handler_13(int sig)
+{
+    (void) sig;
+    exit(0);
+}
+
+static void
+sigabrt_handler_12(int sig)
+{
+    (void) sig;
+    signal(SIGABRT, sigabrt_handler_13);
+    assert(crypto_pwhash_str_alg(NULL, "", 0U, 1U, 1U, -1) == -1);
+    exit(1);
+}
+
+static void
+sigabrt_handler_11(int sig)
+{
+    (void) sig;
+    signal(SIGABRT, sigabrt_handler_12);
+    assert(crypto_box_easy(NULL, NULL, crypto_stream_xsalsa20_MESSAGEBYTES_MAX,
+                           NULL, NULL, NULL) == -1);
+    exit(1);
+}
+
+static void
+sigabrt_handler_10(int sig)
+{
+    (void) sig;
+    signal(SIGABRT, sigabrt_handler_11);
+    assert(crypto_box_easy_afternm(NULL, NULL, crypto_stream_xsalsa20_MESSAGEBYTES_MAX,
+                                   NULL, NULL) == -1);
+    exit(1);
+}
+
+static void
+sigabrt_handler_9(int sig)
+{
+    (void) sig;
+    signal(SIGABRT, sigabrt_handler_10);
+    assert(sodium_base642bin(NULL, 1, NULL, 1, NULL, NULL, NULL, -1) == -1);
+    exit(1);
+}
+
+static void
+sigabrt_handler_8(int sig)
+{
+    (void) sig;
+    signal(SIGABRT, sigabrt_handler_9);
+    assert(sodium_bin2base64(NULL, 1, NULL, 1, sodium_base64_VARIANT_ORIGINAL) == NULL);
+    exit(1);
+}
+
+static void
+sigabrt_handler_7(int sig)
+{
+    (void) sig;
+    signal(SIGABRT, sigabrt_handler_8);
+    assert(sodium_bin2base64(NULL, 1, NULL, 1, -1) == NULL);
+    exit(1);
+}
 
 static void
 sigabrt_handler_6(int sig)
 {
     (void) sig;
-    exit(0);
+    signal(SIGABRT, sigabrt_handler_7);
+    assert(sodium_pad(NULL, NULL, SIZE_MAX, 16, 1) == -1);
+    exit(1);
 }
 
 static void

@@ -5,6 +5,12 @@
 ![libsodium](https://raw.github.com/jedisct1/libsodium/master/logo.png)
 ============
 
+![libsodium sketch](https://download.libsodium.org/libsodium/libsodium-sketch.jpg)
+
+(sketch by [Irina Shestak](https://github.com/lrlna/sketchin))
+
+---
+
 Sodium is a new, easy-to-use software library for encryption,
 decryption, signatures, password hashing and more.
 
@@ -20,8 +26,7 @@ including Windows (with MingW or Visual Studio, x86 and x64), iOS and Android.
 
 ## Documentation
 
-The documentation is a work-in-progress, and is being written using
-Gitbook:
+The documentation is available on Gitbook:
 
 * [libsodium documentation](https://download.libsodium.org/doc/) -
 online, requires Javascript.
