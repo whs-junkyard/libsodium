@@ -170,6 +170,47 @@ else
 	message('On this platform, segmentation violations cannot be caught using signal handlers. This is expected if you enabled a tool such as Address Sanitizer (-fsanitize=address), but be aware that using Address Sanitizer may also significantly reduce performance.')
 endif
 
+test_catchable_abrt = compiler.run('''
+#include <signal.h>
+#include <stdlib.h>
+
+#ifndef SIGABRT
+# error SIGABRT is not defined
+#endif
+
+static void sigabrt_handler_3(int _)
+{
+    exit(0);
+}
+
+static void sigabrt_handler_2(int _)
+{
+    signal(SIGABRT, sigabrt_handler_3);
+    abort();
+    exit(1);
+}
+
+static void sigabrt_handler_1(int _)
+{
+    signal(SIGABRT, sigabrt_handler_2);
+    abort();
+    exit(1);
+}
+
+int main(){
+	signal(SIGABRT, sigabrt_handler_1);
+	abort();
+	exit(1);
+}
+''')
+if test_catchable_abrt.returncode() == 0
+	message('SIGABRT can be caught using signal handlers')
+	add_project_arguments('-DHAVE_CATCHABLE_ABRT=1', language : 'c')
+else
+	message(test_catchable_abrt.returncode())
+	message('On this platform, SIGABRT cannot be caught using signal handlers')
+endif
+
 if not is_emscripten and not is_pnacl
 	mmx = declare_dependency()
 	compiler_args = []

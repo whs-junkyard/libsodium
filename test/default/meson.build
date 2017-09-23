@@ -114,6 +114,12 @@ test(
 )'''
 
 test(
+	'codecs',
+	executable('codecs', 'codecs.c', build_by_default : false, dependencies : [test_deps]),
+	suite : 'codecs'
+)
+
+test(
 	'core1',
 	executable('core1', 'core1.c', build_by_default : false, dependencies : [test_deps]),
 	suite : 'core'
@@ -201,6 +207,12 @@ test(
 	'kx',
 	executable('kx', 'kx.c', build_by_default : false, dependencies : [test_deps]),
 	suite : 'kx'
+)
+
+test(
+	'metamorphic',
+	executable('metamorphic', 'metamorphic.c', build_by_default : false, dependencies : [test_deps]),
+	suite : 'metamorphic'
 )
 
 test(
